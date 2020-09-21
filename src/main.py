@@ -50,6 +50,7 @@ class Mail:
         # send user后334, send PASSWORD 后235
         self.sock.sendall_data(CRLF.join([self._toBs64(self.USER), self._toBs64(self.PASSWORD)]))
         self.receive()
+        self.receive()
 
         return self.sock
 
