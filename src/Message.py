@@ -5,7 +5,6 @@ from base64 import b64encode
 class Message:
     messageEnd = '\r\n.\r\n'  # 结束DATA指令
     lf = '\n'  # 不同的header字段以换行分隔(\n)
-    bl = '\n\n'
     boundaryChars = 'Star-Boundary'  # Content-Type: Multipart/xxx 头后定义分隔符
     boundary = f'--{boundaryChars}'  # 多部分分隔,分隔符前追加--
     boundaryEnds = f'--{boundaryChars}--'  # 分隔结束, 分隔符前后追加--
@@ -64,7 +63,7 @@ class Message:
 
     def _toStr(self):
         # header 与body之间以空行分隔
-        self.message = self._strHeaders + self.bl + self._strBody + self.messageEnd
+        self.message = self._strHeaders + self.lf + self._strBody + self.messageEnd
 
     @property
     def _strBody(self) -> str:
@@ -75,7 +74,7 @@ class Message:
             for name, value in b.items():
                 body += name + ':' + value + self.lf
             # 内容前后空行
-            body += self.bl + content + self.bl
+            body += self.lf + content + self.lf
         body += self.boundaryEnds
         return body
 

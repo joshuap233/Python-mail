@@ -2,42 +2,54 @@ import socket
 
 CRLF = '\r\n'
 
-
-class Socket(socket.socket):
-    def sendall_data(self, data):
-        if not data.endswith(CRLF):
-            data = data + CRLF
-        self.sendall(data.encode())
+CMD = {
+    'USER', 'PASS', 'LIST', 'RETR', 'DELE', 'QUIT',
+    'STAT', 'REST', 'TOP', 'UIDL'
+}
 
 
-sock = Socket(socket.AF_INET, socket.SOCK_STREAM)
+class POP3:
+    def __init__(self, host, port):
+        self.sock = socket.create_connection((host, port))
+        self.file = self.sock.makefile('rb')
+        self.hello = self._receive()
 
+    def _send(self, cmd):
+        self.sock.sendall(f'{cmd}{CRLF}'.encode())
 
-def receive():
-    recv = sock.recv(1024)
-    print(recv)
+    def _receive(self):
+        line = self.file.readline()
+        return line
 
+    def hello(self):
+        return self._receive()
 
-def pop3(host, port, user, password):
-    sock.connect((host, port))
-    receive()
+    def login(self, user, password):
+        self._send(f'USER {user}')
+        self._receive()
+        self._send(f'PASS {password}')
+        return self._receive()
 
-    sock.sendall_data(f'USER {user}')
-    receive()
+    def list(self):
+        self._send('LIST')
+        return self._receive()
 
-    sock.sendall_data(f'PASS {password}')
-    receive()
+    def retr(self, eid):
+        self._send(f'RETR {eid}')
 
-    sock.sendall_data('LIST')
-    receive()
+    def connect(self, user, password):
+        self.login(user, password)
+        self.list()
+        self.retr(1)
 
-    sock.sendall_data('RETR 1')
-    receive()
+    def delete(self, eid):
+        self._send(f'DELE {eid}')
+        return self._receive()
 
-    sock.sendall_data('DELE 1')
-    receive()
+    def quit(self):
+        self._send(f'QUIT')
+        self.sock.close()
 
-    sock.sendall_data('QUIT')
-    receive()
-
-    sock.close()
+    def data(self):
+        for f in self.file:
+            print(f)
